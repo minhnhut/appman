@@ -1,0 +1,11 @@
+global:
+  meta_file_name: meta.yaml
+  current_folder_name: current
+  common_folder_name: common
+  apps_folder: /Users/my_user/apps
+
+apps:
+  app0:
+    path: /Users/my_user/apps/app0
+    meta: meta.yaml
+    common: common
