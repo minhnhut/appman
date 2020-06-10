@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "51ad0f1774a440a29ed873d9be6bf7da",
+    "content-hash": "c4b98669b3a8b969db24e89760e49963",
     "packages": [
         {
             "name": "catfan/medoo",
@@ -117,6 +117,50 @@
                 "response"
             ],
             "time": "2020-02-05T20:36:27+00:00"
+        },
+        {
+            "name": "formr/formr",
+            "version": "v1.1.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/formr/Formr.git",
+                "reference": "090462daf1fc9b4b72200eb50a90a51daa06c421"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/formr/Formr/zipball/090462daf1fc9b4b72200eb50a90a51daa06c421",
+                "reference": "090462daf1fc9b4b72200eb50a90a51daa06c421",
+                "shasum": ""
+            },
+            "require": {
+                "formr/formr": "^1.1",
+                "php": ">=5.6"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "class.formr.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-only"
+            ],
+            "authors": [
+                {
+                    "name": "Tim Gavin",
+                    "homepage": "https://formr.github.io",
+                    "role": "Original Author"
+                }
+            ],
+            "description": "Formr is a PHP micro-framework which helps you build and validate forms quickly, painlessly, and without all the messy overhead.",
+            "funding": [
+                {
+                    "url": "https://github.com/timgavin",
+                    "type": "github"
+                }
+            ],
+            "time": "2020-05-06T02:05:12+00:00"
         },
         {
             "name": "jeremeamia/superclosure",

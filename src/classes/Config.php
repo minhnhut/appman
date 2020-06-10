@@ -39,7 +39,8 @@ class Config
 
     public function addApp($name, $path)
     {
-        $this->internalConfigStore['apps'][$name] = [
+        $this->internalConfigStore['apps'][] = [
+            'name'   => $name,
             'path'   => $path,
             'meta'   => $this->getGlobalConfig(self::META_FILE_NAME),
             'common' => $this->getGlobalConfig(self::COMMON_FOLDER_NAME),
@@ -49,7 +50,10 @@ class Config
 
     protected function saveConfig()
     {
-        file_put_contents(__DIR__. '/../../config.yaml', Yaml::dump($this->internalConfigStore));
+        file_put_contents(
+            __DIR__. '/../../config.yaml',
+            Yaml::dump($this->internalConfigStore, 2, 4, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK)
+        );
     }
 
 }

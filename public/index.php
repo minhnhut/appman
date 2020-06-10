@@ -18,6 +18,7 @@ if (PHP_SAPI == 'cli-server') {
     }
 }
 
+use App\AppManager;
 use App\Config;
 use DI\Container;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -32,7 +33,15 @@ $container->set('config', function() {
     return new Config();
 });
 $container->set('view', function() {
-   return new League\Plates\Engine(__DIR__ . '/../src/views');
+    $engine = new League\Plates\Engine(__DIR__ . '/../src/views/pages');
+    $engine->addFolder('partial', __DIR__ . '/../src/views/partial');
+    $engine->registerFunction('form', function() {
+        return new Formr();
+    });
+    return $engine;
+});
+$container->set('appManager', function() use ($container) {
+   return new AppManager($container->get('config'));
 });
 
 // Set container to create App with on AppFactory
@@ -40,23 +49,10 @@ AppFactory::setContainer($container);
 $app = AppFactory::create();
 
 $app->get('/', function (Request $request, Response $response, $args) {
-    $config = $this->get('config');
-    $view = $this->get('view');
-
-    $apps        = $config->getConfig("apps");
-    $appsPath    = $config->getGlobalConfig(Config::APPS_FOLDER);
-    $currentName = $config->getGlobalConfig(Config::CURRENT_FOLDER_NAME);
-
-    $apps = array_map(function($app) use ($currentName) {
-        $path    = implode(DIRECTORY_SEPARATOR, [$app['path'], $currentName]);
-        $current = readlink($path);
-        if ($current) {
-            $app['version'] = $current;
-        } else {
-            $app['version'] = "Unknown";
-        }
-        return $app;
-    }, $apps);
+    $view       = $this->get('view');
+    /** @var AppManager $appManager */
+    $appManager = $this->get('appManager');
+    $apps       = $appManager->getApps();
 
     $response->getBody()->write(
         $view->render('apps', ['apps' => $apps])
@@ -72,6 +68,30 @@ $app->get('/setup', function (Request $request, Response $response, $args) {
     return $response;
 });
 
+$app->get('/edit', function (Request $request, Response $response, $args) {
+    $config     = $this->get('config');
+    $params     = $request->getQueryParams();
+    $view       = $this->get('view');
+
+    $appName    = $params['app'];
+    /** @var AppManager $appManager */
+    $appManager = $this->get('appManager');
+    $app        = $appManager->getApp($appName);
+
+    if (!$app) {
+        $response->getBody()->write(
+            "App not found"
+        );
+        return $response->withStatus(404);
+    }
+
+    $response->getBody()->write(
+        $view->render('edit', ['app' => $app])
+    );
+
+    return $response;
+});
+
 $app->post('/setup', function (Request $request, Response $response, $args) {
     $config = $this->get('config');
     $params = $request->getParsedBody();
@@ -81,6 +101,7 @@ $app->post('/setup', function (Request $request, Response $response, $args) {
         $params['version'] = 'v0.0';
     }
 
+    $name              = $params['app_name'];
     $version           = $params['version'];
     $appPath           = $params['path'];
     $createPath        = isset($params['create_path']);
@@ -94,6 +115,7 @@ $app->post('/setup', function (Request $request, Response $response, $args) {
         return $response;
     }
 
+    $pathCreated = true;
     if (!is_dir($appPath)) {
         if (!$createPath) {
             $response->withStatus(500)
@@ -101,16 +123,24 @@ $app->post('/setup', function (Request $request, Response $response, $args) {
                      ->write('App path is not a directory');
             return $response;
         }
-        mkdir($createPath, 0777, true);
+        $pathCreated = mkdir($appPath, 0777, true);
+    }
+
+    if (!$pathCreated) {
+        $response->withStatus(500)
+                 ->getBody()
+                 ->write('Unable to create app path: ' . $appPath);
+        return $response;
     }
 
     chdir   ($appPath);
-    mkdir   ($commonFolderName);
-    mkdir   ($version);
-    symlink ($version, $currentFolderName);
+    @mkdir  ($commonFolderName);
+    @mkdir  ($version);
+    @symlink($version, $currentFolderName);
+    $config->addApp($name, $appPath);
 
-    $response->withHeader('Location', '/');
-    return $response;
+    return $response->withHeader('Location', '/')
+                    ->withStatus(302);
 });
 
 $app->run();
