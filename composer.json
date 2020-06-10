@@ -6,7 +6,8 @@
         "league/plates": "^3.3",
         "php-di/php-di": "^6.1",
         "symfony/yaml": "^5.1",
-        "formr/formr": "^1.1"
+        "formr/formr": "^1.1",
+        "ext-zip": "*"
     },
     "autoload": {
         "psr-4": {

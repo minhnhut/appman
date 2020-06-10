@@ -10,6 +10,7 @@ class Config
     const COMMON_FOLDER_NAME = "common_folder_name";
     const META_FILE_NAME = "meta_file_name";
     const APPS_FOLDER = "apps_folder";
+    const TEMP_UPLOAD_FOLDER = "tmp_upload_folder";
 
     protected $internalConfigStore;
 
@@ -37,6 +38,16 @@ class Config
         return $default;
     }
 
+    public function getBasePath()
+    {
+        return realpath(__DIR__ . '/../..');
+    }
+
+    public function getTempPath()
+    {
+        return $this->getBasePath() . $this->getConfig(self::TEMP_UPLOAD_FOLDER);
+    }
+
     public function addApp($name, $path)
     {
         $this->internalConfigStore['apps'][] = [
@@ -52,7 +63,7 @@ class Config
     {
         file_put_contents(
             __DIR__. '/../../config.yaml',
-            Yaml::dump($this->internalConfigStore, 2, 4, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK)
+            Yaml::dump($this->internalConfigStore, 4, 4, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK)
         );
     }
 

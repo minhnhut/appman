@@ -19,10 +19,11 @@
     <tbody>
     <?php foreach ($apps as $appId => $app) : ?>
         <tr>
-            <td><?=$this->e($appId) ?></td>
-            <td><?=$this->e($app['version']) ?></td>
-            <td class="ali">
-                <a href="/edit?app=<?=$appId ?>">[Edit]</a>
+            <td><?=$this->e($app['name']) ?></td>
+            <td style="width: 100px"><?=$this->e($app['version']) ?></td>
+            <td class="ali" style="width:300px; text-align: right;">
+                <a href="/versions?app=<?=$appId ?>">[Versions]</a> -
+                <a href="/view?app=<?=$appId ?>">[Edit]</a> -
                 <a href="/deregister?app=<?=$appId ?>">[Deregister]</a>
             </td>
         </tr>

@@ -1,0 +1,27 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+#tool-container {
+    height: 100vh;
+}
+
+.tool-panel {
+    background: #efefef;
+    position:absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: 0;
+}
+
+#tool-name {
+    padding: 8px;
+    text-align: center;
+    background: #606c76;
+    font-size: 32px;
+    font-weight: bold;
+    color: #fff;
+    box-sizing: border-box;
+}

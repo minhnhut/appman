@@ -36,7 +36,23 @@ class AppManager
         $config      = $this->config;
         $apps        = $config->getConfig("apps");
 
-        return array_map([$this, 'resolveAppInfo'], $apps);
+        return $apps ? array_map([$this, 'resolveAppInfo'], $apps) : [];
+    }
+
+    /**
+     * @param $name
+     */
+    public function getAppVersions($name)
+    {
+        $app = $this->getApp($name);
+        if (!$app || !$app['path']) {
+            return [];
+        }
+        $versions = scandir($app['path'], SCANDIR_SORT_DESCENDING);
+        $versions = array_filter($versions, function($fname) {
+            return !in_array($fname, ['.', '..', 'current', 'common', '.DS_Store']);
+        });
+        return $versions;
     }
 
     /**

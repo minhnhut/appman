@@ -20,6 +20,10 @@ if (PHP_SAPI == 'cli-server') {
 
 use App\AppManager;
 use App\Config;
+use App\Handlers\GetVersionAdd;
+use App\Handlers\GetVersions;
+use App\Handlers\PostVersionAdd;
+use App\Handlers\PostVersionSwitch;
 use DI\Container;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -68,7 +72,7 @@ $app->get('/setup', function (Request $request, Response $response, $args) {
     return $response;
 });
 
-$app->get('/edit', function (Request $request, Response $response, $args) {
+$app->get('/view', function (Request $request, Response $response, $args) {
     $config     = $this->get('config');
     $params     = $request->getQueryParams();
     $view       = $this->get('view');
@@ -93,8 +97,11 @@ $app->get('/edit', function (Request $request, Response $response, $args) {
 });
 
 $app->post('/setup', function (Request $request, Response $response, $args) {
-    $config = $this->get('config');
-    $params = $request->getParsedBody();
+    $config            = $this->get('config');
+    $params            = $request->getParsedBody();
+    $queryParams       = $request->getQueryParams();
+
+    $appId = isset($queryParams['app']) ? $queryParams['app'] : null;
 
     // TODO Validation
     if (!$params['version']) {
@@ -142,5 +149,10 @@ $app->post('/setup', function (Request $request, Response $response, $args) {
     return $response->withHeader('Location', '/')
                     ->withStatus(302);
 });
+
+$app->get('/versions', GetVersions::class);
+$app->get('/version_add', GetVersionAdd::class);
+$app->post('/version_add', PostVersionAdd::class);
+$app->post('/version_switch', PostVersionSwitch::class);
 
 $app->run();
