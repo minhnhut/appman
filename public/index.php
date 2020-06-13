@@ -20,14 +20,26 @@ if (PHP_SAPI == 'cli-server') {
 
 use App\AppManager;
 use App\Config;
+use App\Handlers\GetLogin;
 use App\Handlers\GetVersionAdd;
 use App\Handlers\GetVersions;
+use App\Handlers\PostDeregister;
+use App\Handlers\PostEdit;
+use App\Handlers\PostLogin;
+use App\Handlers\PostLogout;
+use App\Handlers\PostSetup;
 use App\Handlers\PostVersionAdd;
+use App\Handlers\PostVersionRemove;
 use App\Handlers\PostVersionSwitch;
+use App\Middlewares\AuthMiddleware;
 use DI\Container;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Factory\AppFactory;
+use Slim\Middleware\Session;
+use SlimSession\Helper;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -47,10 +59,23 @@ $container->set('view', function() {
 $container->set('appManager', function() use ($container) {
    return new AppManager($container->get('config'));
 });
+// Register globally to app
+$container->set('session', function () {
+    return new Helper();
+});
 
 // Set container to create App with on AppFactory
 AppFactory::setContainer($container);
 $app = AppFactory::create();
+
+$app->add($container->make(AuthMiddleware::class));
+$app->add(
+    new Session([
+        'name' => 'main_session',
+        'autorefresh' => true,
+        'lifetime' => '1 hour',
+    ])
+);
 
 $app->get('/', function (Request $request, Response $response, $args) {
     $view       = $this->get('view');
@@ -90,69 +115,28 @@ $app->get('/view', function (Request $request, Response $response, $args) {
     }
 
     $response->getBody()->write(
-        $view->render('edit', ['app' => $app])
+        $view->render('edit', ['app' => $app, 'success' => isset($params['success'])])
     );
 
     return $response;
 });
 
-$app->post('/setup', function (Request $request, Response $response, $args) {
-    $config            = $this->get('config');
-    $params            = $request->getParsedBody();
-    $queryParams       = $request->getQueryParams();
+$app->post('/setup', PostSetup::class);
+$app->post('/view', PostEdit::class);
 
-    $appId = isset($queryParams['app']) ? $queryParams['app'] : null;
-
-    // TODO Validation
-    if (!$params['version']) {
-        $params['version'] = 'v0.0';
-    }
-
-    $name              = $params['app_name'];
-    $version           = $params['version'];
-    $appPath           = $params['path'];
-    $createPath        = isset($params['create_path']);
-    $currentFolderName = $config->getGlobalConfig(Config::CURRENT_FOLDER_NAME);
-    $commonFolderName  = $config->getGlobalConfig(Config::COMMON_FOLDER_NAME);
-
-    if (!$appPath) {
-        $response->withStatus(500)
-                 ->getBody()
-                 ->write('Invalid app path: ' . $appPath);
-        return $response;
-    }
-
-    $pathCreated = true;
-    if (!is_dir($appPath)) {
-        if (!$createPath) {
-            $response->withStatus(500)
-                     ->getBody()
-                     ->write('App path is not a directory');
-            return $response;
-        }
-        $pathCreated = mkdir($appPath, 0777, true);
-    }
-
-    if (!$pathCreated) {
-        $response->withStatus(500)
-                 ->getBody()
-                 ->write('Unable to create app path: ' . $appPath);
-        return $response;
-    }
-
-    chdir   ($appPath);
-    @mkdir  ($commonFolderName);
-    @mkdir  ($version);
-    @symlink($version, $currentFolderName);
-    $config->addApp($name, $appPath);
-
-    return $response->withHeader('Location', '/')
-                    ->withStatus(302);
-});
+$app->post('/deregister', PostDeregister::class);
 
 $app->get('/versions', GetVersions::class);
 $app->get('/version_add', GetVersionAdd::class);
 $app->post('/version_add', PostVersionAdd::class);
+$app->post('/version_remove', PostVersionRemove::class);
 $app->post('/version_switch', PostVersionSwitch::class);
+
+// API
+$app->post('/api/version_add', \App\Handlers\Api\PostVersionAdd::class);
+
+$app->get('/login', GetLogin::class);
+$app->post('/login', PostLogin::class);
+$app->get('/logout', PostLogout::class);
 
 $app->run();

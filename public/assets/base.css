@@ -9,19 +9,112 @@ body {
 
 .tool-panel {
     background: #efefef;
-    position:absolute;
+    position:fixed;
     bottom: 0;
     left: 0;
-    right: 0;
+    width: 240px;
     top: 0;
 }
 
 #tool-name {
     padding: 8px;
-    text-align: center;
+    text-align: left;
     background: #606c76;
     font-size: 32px;
     font-weight: bold;
     color: #fff;
     box-sizing: border-box;
+}
+
+#tool-name small {
+    font-size: 16px;
+}
+
+.tool-panel .menu {
+    list-style: none;
+}
+
+.tool-panel .menu li a {
+    display: block;
+    padding: 6px;
+}
+
+.tool-panel .menu li {
+    margin-bottom: 0;
+}
+
+.tool-panel .menu li a:hover {
+    background: #dfdfdf;
+}
+
+.tool-panel .menu li img {
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+.card {
+    border: 1px solid #efefef;
+    border-radius: 5px;
+    padding: 10px;
+    display: block;
+    width: 100%;
+    margin-bottom: 2rem;
+}
+
+.tabs {
+    width: 100%;
+    display: block;
+    table-layout: fixed;
+    border: 1px solid #dfdfdf;
+}
+
+.tabs ul {
+    list-style: none;
+    /* display: table-row; */
+}
+
+.tabs .header, .tabs .header li {
+    height: 50px;
+    cursor: pointer;
+    border-bottom: 1px solid #333;
+    vertical-align: middle;
+}
+
+.tabs .header li {
+    /* display: table-cell; */
+    flex-grow: 1;
+    flex-basis: 0;
+}
+
+.tabs .header {
+    background: #efefef;
+    width: 100%;
+    display: flex;
+}
+
+.tabs .header, .tabs .body {
+    margin-bottom: 0;
+}
+
+.tabs .header li, .tabs .body li {
+    padding: 1.5rem 1.5rem 0;
+    margin-bottom: 0;
+}
+
+.tabs .header li:hover {
+    background: #dfdfdf;
+}
+
+.tabs .header li.active {
+    background: #333;
+    color: #fff;
+}
+
+.app-icon {
+    background-image: url(img/appicons.png);
+    background-position: 0 0;
+    display: inline-block;
+    width: 48px;
+    height: 48px;
+    vertical-align: middle;
 }

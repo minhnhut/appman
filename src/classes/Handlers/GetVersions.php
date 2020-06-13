@@ -33,7 +33,7 @@ class GetVersions
         $versions = $this->appManager->getAppVersions($queryParams['app']);
 
         $response->getBody()->write(
-            $view->render('versions', ['app' => $app, 'appId' => $queryParams['app'], 'versions' => $versions])
+            $view->render('versions', ['app' => $app, 'appId' => $queryParams['app'], 'versions' => $versions, 'success' => isset($queryParams['success'])])
         );
         return $response;
     }

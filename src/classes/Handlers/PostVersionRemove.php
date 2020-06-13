@@ -2,7 +2,6 @@
 
 namespace App\Handlers;
 
-use App\Config;
 use App\HandlerTraits\GetQueryParamApp;
 use App\HandlerTraits\UseAppManagerService;
 use App\HandlerTraits\UseConfigService;
@@ -10,8 +9,9 @@ use App\HandlerTraits\UseViewService;
 use DI\Container;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Symfony\Component\Filesystem\Filesystem;
 
-class PostVersionSwitch
+class PostVersionRemove
 {
     use UseViewService, UseAppManagerService, UseConfigService, GetQueryParamApp;
 
@@ -22,9 +22,9 @@ class PostVersionSwitch
     }
 
     public function __invoke (Request $request, Response $response, $args) {
-        $app = $this->getQueryParamApp($request);
+        $app    = $this->getQueryParamApp($request);
         $queryParams = $request->getQueryParams();
-        $params      = $request->getParsedBody();
+        $params = $request->getParsedBody();
 
         if (!$app) {
             $response->withStatus(404)
@@ -33,19 +33,25 @@ class PostVersionSwitch
             return $response;
         }
 
-        $versions = $this->appManager->getAppVersions($queryParams['app']);
-        $version  = $params['version'];
-
-        if (!in_array($version, $versions)) {
-            $response->withStatus(404)
-                     ->getBody()
-                     ->write('Version not found');
-            return $response;
+        if (!isset($params['version']) || !$params['version']) {
+            $response->getBody()
+                     ->write('Version name is required');
+            return $response->withStatus(400);
         }
 
-        $this->appManager->switchVersion($queryParams['app'], $version);
+        $version  = $params['version'];
+        $versions = $this->appManager->getAppVersions($queryParams['app']);
+        if (!in_array($version, $versions)) {
+            $response->getBody()
+                     ->write('Version name is not existed.');
+            return $response->withStatus(404);
+        }
+
+        $filesystem = new Filesystem();
+        $filesystem->remove($app['path'] . DIRECTORY_SEPARATOR . $version);
 
         return $response->withHeader('Location', '/versions?app='.$queryParams['app'])
                         ->withStatus(302);
     }
+
 }

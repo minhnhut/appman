@@ -10,8 +10,9 @@ use App\HandlerTraits\UseViewService;
 use DI\Container;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\UploadedFileInterface;
 
-class PostVersionSwitch
+class PostEdit
 {
     use UseViewService, UseAppManagerService, UseConfigService, GetQueryParamApp;
 
@@ -22,9 +23,11 @@ class PostVersionSwitch
     }
 
     public function __invoke (Request $request, Response $response, $args) {
-        $app = $this->getQueryParamApp($request);
-        $queryParams = $request->getQueryParams();
-        $params      = $request->getParsedBody();
+        $config            = $this->config;
+        $queryParams       = $request->getQueryParams();
+        $params            = $request->getParsedBody();
+
+        $app               = $this->appManager->getApp($queryParams['app']);
 
         if (!$app) {
             $response->withStatus(404)
@@ -33,19 +36,17 @@ class PostVersionSwitch
             return $response;
         }
 
-        $versions = $this->appManager->getAppVersions($queryParams['app']);
-        $version  = $params['version'];
+        $params['extra_links'] =  array_map(
+            function ($v) {return trim($v);},
+            explode("\n", $params['extra_links']));
 
-        if (!in_array($version, $versions)) {
-            $response->withStatus(404)
-                     ->getBody()
-                     ->write('Version not found');
-            return $response;
-        }
+        $params['ignore_files'] =  array_map(
+            function ($v) {return trim($v);},
+            explode("\n", $params['ignore_files']));
 
-        $this->appManager->switchVersion($queryParams['app'], $version);
+        $config->updateApp($queryParams['app'], $params);
 
-        return $response->withHeader('Location', '/versions?app='.$queryParams['app'])
+        return $response->withHeader('Location', "/versions?app={$queryParams['app']}&success=1")
                         ->withStatus(302);
     }
 }

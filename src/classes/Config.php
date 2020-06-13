@@ -48,15 +48,45 @@ class Config
         return $this->getBasePath() . $this->getConfig(self::TEMP_UPLOAD_FOLDER);
     }
 
-    public function addApp($name, $path)
+    public function addApp($name, $path, $otherConfig)
     {
-        $this->internalConfigStore['apps'][] = [
+        $app = [
             'name'   => $name,
             'path'   => $path,
             'meta'   => $this->getGlobalConfig(self::META_FILE_NAME),
             'common' => $this->getGlobalConfig(self::COMMON_FOLDER_NAME),
         ];
+        unset($otherConfig['path'], $otherConfig['meta'], $otherConfig['common']);
+        $this->internalConfigStore['apps'][] = array_merge(
+            $app,
+            $otherConfig
+        );
+        $this->internalConfigStore['apps'][] = $app;
         $this->saveConfig();
+    }
+
+    public function updateApp($name, $newConfig)
+    {
+        $apps = $this->internalConfigStore['apps'];
+        if (isset($apps[$name])) {
+            unset($newConfig['path'], $newConfig['meta'], $newConfig['common']);
+            if (isset($newConfig['extra_links']) && !is_array($newConfig['extra_links'])) {
+                $newConfig['extra_links'] = [$newConfig['extra_links']];
+            }
+            $this->internalConfigStore['apps'][$name] = array_merge(
+                $apps[$name],
+                $newConfig
+            );
+            $this->saveConfig();
+        }
+    }
+
+    public function deregisterApp($name)
+    {
+        if (isset($this->internalConfigStore['apps'][$name])) {
+            unset($this->internalConfigStore['apps'][$name]);
+            $this->saveConfig();
+        }
     }
 
     protected function saveConfig()
