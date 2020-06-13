@@ -3,6 +3,8 @@ global:
   current_folder_name: current
   common_folder_name: common
   apps_folder: /Users/my_user/apps
+  auth_username: admin
+  auth_password: password
 
 apps:
   app0:
