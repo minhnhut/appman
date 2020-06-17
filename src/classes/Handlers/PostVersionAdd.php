@@ -72,6 +72,10 @@ class PostVersionAdd
                 return $this->handleS3PullDeploy($request, $response);
         }
 
+        if ($app['version'] == $version) {
+            $this->appManager->switchVersion($queryParams['app'], $version);
+        }
+
         return $response->withHeader('Location', '/versions?app='.$queryParams['app'])
                         ->withStatus(302);
     }

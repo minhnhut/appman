@@ -2,6 +2,8 @@
 
 namespace App;
 
+use Symfony\Component\Filesystem\Filesystem;
+
 class AppManager
 {
     protected $config;
@@ -64,10 +66,12 @@ class AppManager
         $app               = $this->getApp($name);
         $config            = $this->config;
         $currentFolderName = $app['current_folder'] ?? $config->getGlobalConfig(Config::CURRENT_FOLDER_NAME);
+        $filesystem        = new Filesystem();
+        $isWindows         = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
 
         if (chdir ($app['path'])) {
             $execSupport = false;
-            if(exec('echo EXEC') == 'EXEC'){
+            if(exec('echo EXEC') == 'EXEC' && !$isWindows){
                 // exec is available, lets use it
                 // link by ln is atomic action
                 exec     ("ln -sfn $version $currentFolderName");
@@ -76,7 +80,7 @@ class AppManager
                 // exec is not available, so we need to unlink first
                 // then link again, there is a chance of very short down time
                 @unlink  ($currentFolderName);
-                @symlink ($version, $currentFolderName);
+                $filesystem->symlink($version, $currentFolderName, true);
             }
 
             if (chdir($currentFolderName)) {
@@ -84,10 +88,18 @@ class AppManager
                     $extraLinks = !is_array($app['extra_links']) ? [$app['extra_links']] : $app['extra_links'];
                     foreach ($extraLinks as $extraLink) {
                         $parts = explode(':', $extraLink);
+                        if (count($parts) !== 2) continue;
+                        if ($filesystem->exists($parts[1])) {
+                            $backupName = $parts[1] . ".appman.bak";
+                            if ($filesystem->exists($backupName)) {
+                                $filesystem->remove($backupName);
+                            }
+                            $filesystem->rename($parts[1], $backupName);
+                        }
                         if ($execSupport) {
                             exec ("ln -sfn {$parts[0]} {$parts[1]}");
                         } else {
-                            @symlink ($parts[0], $parts[1]);
+                            $filesystem->symlink($parts[0], $parts[1], true);
                         }
                     }
                 }
