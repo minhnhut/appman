@@ -34,7 +34,7 @@ class AuthMiddleware
         $auth = $this->session->get('auth', '');
         if (!$auth && $path !== '/login' && strpos($path, '/api') !== 0) {
             $response = new Response();
-            return $response->withStatus(301)->withHeader('Location', '/login');
+            return $response->withStatus(302)->withHeader('Location', '/login');
         }
 
         return $handler->handle($request);
