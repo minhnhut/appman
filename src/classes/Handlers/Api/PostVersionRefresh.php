@@ -11,7 +11,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\UploadedFileInterface;
 
-class PostVersionAdd
+class PostVersionRefresh
 {
     use UseViewService, UseAppManagerService, UseConfigService, GetQueryParamApp;
 
@@ -43,8 +43,16 @@ class PostVersionAdd
         }
 
         if (!empty($app['api_key']) && $key == $app['api_key']) {
-            $postVersionAdd = new \App\Handlers\PostVersionAdd($this->container);
-            return $postVersionAdd($request, $response, $args)->withStatus(200);
+            $version        = $params['version'];
+            $this->appManager->switchVersion($queryParams['app'], $version);
+            $response->withStatus(200)
+                     ->getBody()
+                     ->write(
+                         json_encode([
+                             'message' => 'OK'
+                         ])
+                     );
+            return $response;
         }
 
         $response

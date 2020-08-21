@@ -65,19 +65,24 @@ class PostVersionAdd
             }
         }
 
+
         switch ($params['deploy_strategy']) {
             case self::DEPLOY_STRATEGY_UPLOAD:
-                return $this->handleFileUploadDeploy($request, $response);
+                $response = $this->handleFileUploadDeploy($request, $response);
+            break;
             case self::DEPLOY_STRATEGY_S3_PULL:
-                return $this->handleS3PullDeploy($request, $response);
+                $response = $this->handleS3PullDeploy($request, $response);
+            break;
+            default:
+                $response = $response->withHeader('Location', '/versions?app='.$queryParams['app'])
+                    ->withStatus(302);
         }
 
         if ($app['version'] == $version) {
             $this->appManager->switchVersion($queryParams['app'], $version);
         }
 
-        return $response->withHeader('Location', '/versions?app='.$queryParams['app'])
-                        ->withStatus(302);
+        return $response;
     }
 
     private function handleFileUploadDeploy(Request $request, Response $response)

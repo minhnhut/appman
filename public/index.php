@@ -134,6 +134,7 @@ $app->post('/version_switch', PostVersionSwitch::class);
 
 // API
 $app->post('/api/version_add', \App\Handlers\Api\PostVersionAdd::class);
+$app->post('/api/version_refresh', \App\Handlers\Api\PostVersionRefresh::class);
 
 $app->get('/login', GetLogin::class);
 $app->post('/login', PostLogin::class);
